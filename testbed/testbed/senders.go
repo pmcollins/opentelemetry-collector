@@ -344,6 +344,7 @@ func (ome *OTLPMetricsDataSender) Start() error {
 	factory := otlpexporter.NewFactory()
 	cfg := factory.CreateDefaultConfig().(*otlpexporter.Config)
 	cfg.Endpoint = fmt.Sprintf("%s:%d", ome.host, ome.port)
+
 	cfg.TLSSetting = configtls.TLSClientSetting{
 		Insecure: true,
 	}
