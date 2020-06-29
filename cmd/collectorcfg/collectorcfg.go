@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
 	"gopkg.in/yaml.v2"
 
 	"go.opentelemetry.io/collector/config/configmodels"
@@ -43,22 +42,6 @@ func main() {
 	_ = ioutil.WriteFile(filename, []byte(bigYaml), 0644)
 }
 
-type strMap map[string]interface{}
-
-func serviceYaml(receiverName string, procName string, exporterName string) string {
-	m := strMap{}
-	m["service"] = strMap{
-		"pipelines": strMap{
-			"metrics": strMap{
-				"receivers":  "[" + receiverName + "]",
-				"processors": "[" + procName + "]",
-				"exporters":  "[" + exporterName + "]",
-			},
-		},
-	}
-	return mapToYaml(m)
-}
-
 func receiverSection() (string, string) {
 	println("Choose a receiver")
 	var names []string
@@ -68,9 +51,8 @@ func receiverSection() (string, string) {
 	key := menu(names)
 	rcvrFact := factories.Receivers[configmodels.Type(key)]
 	cfg := rcvrFact.CreateDefaultConfig()
-	populateStruct(cfg)
+	rcvrYaml := fillOutStruct(cfg)
 
-	rcvrYaml := structToYaml(cfg)
 	return fmt.Sprintf(
 		`receivers:
   %s:
@@ -78,21 +60,18 @@ func receiverSection() (string, string) {
 }
 
 func processorSection() (string, string) {
-	println("Choose a processor")
+	println("Choose a processor ([enter] to skip)")
 	var names []string
 	for name, _ := range factories.Processors {
 		names = append(names, string(name))
 	}
-	const none = "[none]"
-	names = append(names, none)
 	key := menu(names)
-	if key == none {
+	if key == "" {
 		return "", ""
 	}
 	procFactory := factories.Processors[configmodels.Type(key)]
 	cfg := procFactory.CreateDefaultConfig()
-	populateStruct(cfg)
-	yml := structToYaml(cfg)
+	yml := fillOutStruct(cfg)
 	return fmt.Sprintf(
 		`processors:
   %s
@@ -108,8 +87,7 @@ func exporterSection() (string, string) {
 	key := menu(names)
 	exporterFactory := factories.Exporters[configmodels.Type(key)]
 	cfg := exporterFactory.CreateDefaultConfig()
-	populateStruct(cfg)
-	yml := structToYaml(cfg)
+	yml := fillOutStruct(cfg)
 	return fmt.Sprintf(
 		`exporters:
   %s
@@ -123,6 +101,9 @@ func menu(names []string) string {
 	}
 	print("> ")
 	numStr := readline("")
+	if numStr == "" {
+		return ""
+	}
 	num, err := strconv.Atoi(numStr)
 	if err != nil {
 		panic(err)
@@ -132,28 +113,15 @@ func menu(names []string) string {
 	return key
 }
 
-func structToYaml(in interface{}) string {
+type strMap map[string]interface{}
+
+func fillOutStruct(in interface{}) string {
 	m := strMap{}
-	err := mapstructure.Decode(in, &m)
-	if err != nil {
-		panic(err)
-	}
+	fillOutMap(reflect.ValueOf(in), m, 0)
 	return mapToYaml(m)
 }
 
-func mapToYaml(m strMap) string {
-	yml, err := yaml.Marshal(m)
-	if err != nil {
-		panic(err)
-	}
-	return string(yml)
-}
-
-func populateStruct(in interface{}) {
-	populate(reflect.ValueOf(in), 0)
-}
-
-func populate(input reflect.Value, lvl int) {
+func fillOutMap(input reflect.Value, m strMap, lvl int) {
 	prntr := printer{lvl}
 	if input.Kind() == reflect.Ptr {
 		input = input.Elem()
@@ -161,10 +129,10 @@ func populate(input reflect.Value, lvl int) {
 	inputType := input.Type()
 	for i := 0; i < input.NumField(); i++ {
 		structField := inputType.Field(i)
-		if structField.Tag == `mapstructure:"-"` {
+		tag, meta := mTag(structField.Tag)
+		if tag == "-" {
 			continue
 		}
-		tag, meta := mTag(structField.Tag)
 		label := tag
 		if label == "" {
 			label = structField.Name
@@ -174,12 +142,18 @@ func populate(input reflect.Value, lvl int) {
 		}
 		fldVal := input.Field(i)
 		switch fldVal.Kind() {
+		case reflect.Map:
+			prntr.println(label + ": map type not implemented yet")
+			continue
+		case reflect.Slice:
+			prntr.println(label + ": slice type not implemented yet")
+			continue
 		case reflect.Struct:
 			prntr.print(label)
 
 			if meta == "omitempty" {
-				print(" skip? y/n: ")
-				skip := readline("")
+				print(" skip? [y]/n: ")
+				skip := readline("y")
 				if skip == "y" {
 					continue
 				}
@@ -187,13 +161,19 @@ func populate(input reflect.Value, lvl int) {
 				println()
 			}
 
-			populate(fldVal, lvl+1)
+			if meta == "squash" {
+				fillOutMap(fldVal, m, lvl+1)
+			} else {
+				subMap := strMap{}
+				m[label] = subMap
+				fillOutMap(fldVal, subMap, lvl+1)
+			}
 		case reflect.Ptr:
 			prntr.print(label)
 
 			if meta == "omitempty" {
-				print(" skip? y/n: ")
-				skip := readline("")
+				print(" skip? [y]/n: ")
+				skip := readline("y")
 				if skip == "y" {
 					continue
 				}
@@ -201,10 +181,14 @@ func populate(input reflect.Value, lvl int) {
 				println()
 			}
 
-			fldType := fldVal.Type()
-			newVal := reflect.New(fldType.Elem())
-			fldVal.Set(newVal)
-			populate(newVal, lvl+1)
+			// todo handle squash here?
+
+			newVal := reflect.New(fldVal.Type().Elem())
+
+			subMap := strMap{}
+			m[label] = subMap
+
+			fillOutMap(newVal, subMap, lvl+1)
 		case reflect.String:
 			factoryDefault := fldVal.String()
 			if factoryDefault == "" {
@@ -213,19 +197,14 @@ func populate(input reflect.Value, lvl int) {
 				prntr.print(label + " (default: [" + factoryDefault + "]): ")
 			}
 			str := readline(factoryDefault)
-			fldVal.SetString(str)
+			m[label] = str
 		case reflect.Bool:
 			prntr.print(label + ` ("true"/"false"): `)
 			str := readline("")
 			if str == "" {
 				continue
 			}
-			b, err := strconv.ParseBool(str)
-			if err != nil {
-				println(err.Error())
-				continue
-			}
-			fldVal.SetBool(b)
+			m[label] = str
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			factoryDefault := fldVal.Int()
 
@@ -242,12 +221,12 @@ func populate(input reflect.Value, lvl int) {
 				if str == "" {
 					continue
 				}
-				duration, err := time.ParseDuration(str)
+				_, err := time.ParseDuration(str)
 				if err != nil {
 					println(err.Error())
 					continue
 				}
-				fldVal.SetInt(int64(duration))
+				m[label] = str
 				continue
 			}
 
@@ -260,12 +239,12 @@ func populate(input reflect.Value, lvl int) {
 			}
 
 			str := readline(dfltStr)
-			i, err := strconv.Atoi(str)
+			_, err := strconv.Atoi(str)
 			if err != nil {
 				println(err.Error())
 				continue
 			}
-			fldVal.SetInt(int64(i))
+			m[label] = str
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			factoryDefault := fldVal.Uint()
 			dfltStr := ""
@@ -279,14 +258,22 @@ func populate(input reflect.Value, lvl int) {
 			if str == "" {
 				continue
 			}
-			i, err := strconv.Atoi(str)
+			_, err := strconv.Atoi(str)
 			if err != nil {
 				println(err.Error())
 				continue
 			}
-			fldVal.SetUint(uint64(i))
+			m[label] = str
 		}
 	}
+}
+
+func mapToYaml(m strMap) string {
+	yml, err := yaml.Marshal(m)
+	if err != nil {
+		panic(err)
+	}
+	return string(yml)
 }
 
 func mTag(s reflect.StructTag) (string, string) {
@@ -338,4 +325,18 @@ func indent(s string, lvl int) string {
 		out += spaces + line + lf
 	}
 	return out
+}
+
+func serviceYaml(receiverName string, procName string, exporterName string) string {
+	m := strMap{}
+	m["service"] = strMap{
+		"pipelines": strMap{
+			"metrics": strMap{
+				"receivers":  []string{receiverName},
+				"processors": []string{procName},
+				"exporters":  []string{exporterName},
+			},
+		},
+	}
+	return mapToYaml(m)
 }
