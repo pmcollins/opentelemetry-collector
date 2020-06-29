@@ -26,4 +26,3 @@ service:
       receivers: [examplereceiver]
       processors: [exampleprocessor]
       exporters: [exampleexporter]
-

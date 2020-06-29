@@ -26,6 +26,7 @@ require (
 	github.com/jaegertracing/jaeger v1.18.0
 	github.com/joshdk/go-junit v0.0.0-20200312181801-e5d93c0f31a8
 	github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024
+	github.com/mitchellh/mapstructure v1.2.2
 	github.com/mjibson/esc v0.2.0
 	github.com/open-telemetry/opentelemetry-proto v0.3.0
 	github.com/openzipkin/zipkin-go v0.2.1
