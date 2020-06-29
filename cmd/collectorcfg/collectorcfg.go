@@ -50,9 +50,9 @@ func serviceYaml(receiverName string, procName string, exporterName string) stri
 	m["service"] = strMap{
 		"pipelines": strMap{
 			"metrics": strMap{
-				"receivers": []string{receiverName},
-				"processors": []string{procName},
-				"exporters": []string{exporterName},
+				"receivers":  "[" + receiverName + "]",
+				"processors": "[" + procName + "]",
+				"exporters":  "[" + exporterName + "]",
 			},
 		},
 	}
@@ -65,7 +65,7 @@ func receiverSection() (string, string) {
 	for name, _ := range factories.Receivers {
 		names = append(names, string(name))
 	}
-	key := readKey(names)
+	key := menu(names)
 	rcvrFact := factories.Receivers[configmodels.Type(key)]
 	cfg := rcvrFact.CreateDefaultConfig()
 	populateStruct(cfg)
@@ -83,9 +83,14 @@ func processorSection() (string, string) {
 	for name, _ := range factories.Processors {
 		names = append(names, string(name))
 	}
-	key := readKey(names)
-	procFact := factories.Processors[configmodels.Type(key)]
-	cfg := procFact.CreateDefaultConfig()
+	const none = "[none]"
+	names = append(names, none)
+	key := menu(names)
+	if key == none {
+		return "", ""
+	}
+	procFactory := factories.Processors[configmodels.Type(key)]
+	cfg := procFactory.CreateDefaultConfig()
 	populateStruct(cfg)
 	yml := structToYaml(cfg)
 	return fmt.Sprintf(
@@ -100,9 +105,9 @@ func exporterSection() (string, string) {
 	for name, _ := range factories.Exporters {
 		names = append(names, string(name))
 	}
-	key := readKey(names)
-	exporterFact := factories.Exporters[configmodels.Type(key)]
-	cfg := exporterFact.CreateDefaultConfig()
+	key := menu(names)
+	exporterFactory := factories.Exporters[configmodels.Type(key)]
+	cfg := exporterFactory.CreateDefaultConfig()
 	populateStruct(cfg)
 	yml := structToYaml(cfg)
 	return fmt.Sprintf(
@@ -111,7 +116,7 @@ func exporterSection() (string, string) {
 %s`, key, indent(yml, 4)), key
 }
 
-func readKey(names []string) string {
+func menu(names []string) string {
 	sort.Strings(names)
 	for i, name := range names {
 		fmt.Printf("%d: %v\n", i+1, name)
@@ -123,7 +128,7 @@ func readKey(names []string) string {
 		panic(err)
 	}
 	key := names[num-1]
-	println("Configuring " + key)
+	println("Selected " + key)
 	return key
 }
 
