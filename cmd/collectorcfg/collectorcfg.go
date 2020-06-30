@@ -74,7 +74,7 @@ func processorSection() (string, string) {
 	yml := fillOutStruct(cfg)
 	return fmt.Sprintf(
 		`processors:
-  %s
+  %s:
 %s`, key, indent(yml, 4)), key
 }
 
@@ -90,7 +90,7 @@ func exporterSection() (string, string) {
 	yml := fillOutStruct(cfg)
 	return fmt.Sprintf(
 		`exporters:
-  %s
+  %s:
 %s`, key, indent(yml, 4)), key
 }
 
@@ -329,13 +329,16 @@ func indent(s string, lvl int) string {
 
 func serviceYaml(receiverName string, procName string, exporterName string) string {
 	m := strMap{}
+	metricsMap := strMap{
+		"receivers": []string{receiverName},
+		"exporters": []string{exporterName},
+	}
+	if procName != "" {
+		metricsMap["processors"] = []string{procName}
+	}
 	m["service"] = strMap{
 		"pipelines": strMap{
-			"metrics": strMap{
-				"receivers":  []string{receiverName},
-				"processors": []string{procName},
-				"exporters":  []string{exporterName},
-			},
+			"metrics": metricsMap,
 		},
 	}
 	return mapToYaml(m)
