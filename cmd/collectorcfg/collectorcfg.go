@@ -52,7 +52,6 @@ func receiverSection() (string, string) {
 	rcvrFact := factories.Receivers[configmodels.Type(key)]
 	cfg := rcvrFact.CreateDefaultConfig()
 	rcvrYaml := fillOutStruct(cfg)
-
 	return fmt.Sprintf(
 		`receivers:
   %s:
@@ -181,7 +180,7 @@ func fillOutMap(input reflect.Value, m strMap, lvl int) {
 				println()
 			}
 
-			// todo handle squash here?
+			// todo handle squash?
 
 			newVal := reflect.New(fldVal.Type().Elem())
 
