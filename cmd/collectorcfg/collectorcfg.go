@@ -51,7 +51,7 @@ func receiverSection() (string, string) {
 	key := menu(names)
 	rcvrFact := factories.Receivers[configmodels.Type(key)]
 	cfg := rcvrFact.CreateDefaultConfig()
-	rcvrYaml := fillOutStruct(cfg)
+	rcvrYaml := populateStruct(cfg)
 	return fmt.Sprintf(
 		`receivers:
   %s:
@@ -70,7 +70,7 @@ func processorSection() (string, string) {
 	}
 	procFactory := factories.Processors[configmodels.Type(key)]
 	cfg := procFactory.CreateDefaultConfig()
-	yml := fillOutStruct(cfg)
+	yml := populateStruct(cfg)
 	return fmt.Sprintf(
 		`processors:
   %s:
@@ -86,7 +86,7 @@ func exporterSection() (string, string) {
 	key := menu(names)
 	exporterFactory := factories.Exporters[configmodels.Type(key)]
 	cfg := exporterFactory.CreateDefaultConfig()
-	yml := fillOutStruct(cfg)
+	yml := populateStruct(cfg)
 	return fmt.Sprintf(
 		`exporters:
   %s:
@@ -114,13 +114,13 @@ func menu(names []string) string {
 
 type strMap map[string]interface{}
 
-func fillOutStruct(in interface{}) string {
+func populateStruct(in interface{}) string {
 	m := strMap{}
-	fillOutMap(reflect.ValueOf(in), m, 0)
+	populateMap(reflect.ValueOf(in), m, 0)
 	return mapToYaml(m)
 }
 
-func fillOutMap(input reflect.Value, m strMap, lvl int) {
+func populateMap(input reflect.Value, m strMap, lvl int) {
 	prntr := printer{lvl}
 	if input.Kind() == reflect.Ptr {
 		input = input.Elem()
@@ -136,6 +136,7 @@ func fillOutMap(input reflect.Value, m strMap, lvl int) {
 		if label == "" {
 			label = structField.Name
 		}
+		mapKey := label // we don't want (optional) in the map key
 		if meta == "omitempty" {
 			label += " (optional)"
 		}
@@ -161,11 +162,11 @@ func fillOutMap(input reflect.Value, m strMap, lvl int) {
 			}
 
 			if meta == "squash" {
-				fillOutMap(fldVal, m, lvl+1)
+				populateMap(fldVal, m, lvl+1)
 			} else {
 				subMap := strMap{}
-				m[label] = subMap
-				fillOutMap(fldVal, subMap, lvl+1)
+				m[mapKey] = subMap
+				populateMap(fldVal, subMap, lvl+1)
 			}
 		case reflect.Ptr:
 			prntr.print(label)
@@ -185,9 +186,9 @@ func fillOutMap(input reflect.Value, m strMap, lvl int) {
 			newVal := reflect.New(fldVal.Type().Elem())
 
 			subMap := strMap{}
-			m[label] = subMap
+			m[mapKey] = subMap
 
-			fillOutMap(newVal, subMap, lvl+1)
+			populateMap(newVal, subMap, lvl+1)
 		case reflect.String:
 			factoryDefault := fldVal.String()
 			if factoryDefault == "" {
@@ -196,14 +197,14 @@ func fillOutMap(input reflect.Value, m strMap, lvl int) {
 				prntr.print(label + " (default: [" + factoryDefault + "]): ")
 			}
 			str := readline(factoryDefault)
-			m[label] = str
+			m[mapKey] = str
 		case reflect.Bool:
 			prntr.print(label + ` ("true"/"false"): `)
 			str := readline("")
 			if str == "" {
 				continue
 			}
-			m[label] = str
+			m[mapKey] = str
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			factoryDefault := fldVal.Int()
 
@@ -225,7 +226,7 @@ func fillOutMap(input reflect.Value, m strMap, lvl int) {
 					println(err.Error())
 					continue
 				}
-				m[label] = str
+				m[mapKey] = str
 				continue
 			}
 
@@ -238,12 +239,12 @@ func fillOutMap(input reflect.Value, m strMap, lvl int) {
 			}
 
 			str := readline(dfltStr)
-			_, err := strconv.Atoi(str)
+			num, err := strconv.Atoi(str)
 			if err != nil {
 				println(err.Error())
 				continue
 			}
-			m[label] = str
+			m[mapKey] = num
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			factoryDefault := fldVal.Uint()
 			dfltStr := ""
@@ -257,12 +258,12 @@ func fillOutMap(input reflect.Value, m strMap, lvl int) {
 			if str == "" {
 				continue
 			}
-			_, err := strconv.Atoi(str)
+			num, err := strconv.Atoi(str)
 			if err != nil {
 				println(err.Error())
 				continue
 			}
-			m[label] = str
+			m[mapKey] = num
 		}
 	}
 }
