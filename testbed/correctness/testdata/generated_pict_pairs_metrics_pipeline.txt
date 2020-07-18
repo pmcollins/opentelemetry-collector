@@ -1,0 +1,5 @@
+Receiver	Exporter
+opencensus	otlp
+opencensus	opencensus
+otlp	otlp
+otlp	opencensus
