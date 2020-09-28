@@ -3,8 +3,7 @@ receivers:
 
 processors:
   exprfilter:
-    exclude:
-      - "MetricName == 'foo'"
+    query: "MetricName == 'foo'"
 
 exporters:
   exampleexporter:
