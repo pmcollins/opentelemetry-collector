@@ -282,15 +282,25 @@ genpdata:
 	go run cmd/pdatagen/main.go
 	$(MAKE) fmt
 
+# Point locally checked out contrib to this repo.
+.PHONY: mod-contrib
+mod-contrib:
+	make -C $(CONTRIB_PATH) for-all CMD="go mod edit -replace go.opentelemetry.io/collector=$(CURDIR)"
+
+# Restore changes made by mod-contrib.
+.PHONY: restore-contrib
+restore-contrib:
+	make -C $(CONTRIB_PATH) for-all CMD="go mod edit -dropreplace go.opentelemetry.io/collector"
+
 # Checks that the HEAD of the contrib repo checked out in CONTRIB_PATH compiles
 # against the current version of this repo.
 .PHONY: check-contrib
 check-contrib:
 	@echo Setting contrib at $(CONTRIB_PATH) to use this core checkout
-	make -C $(CONTRIB_PATH) for-all CMD="go mod edit -replace go.opentelemetry.io/collector=$(CURDIR)"
+	make mod-contrib
 	make -C $(CONTRIB_PATH) test
 	@echo Restoring contrib to no longer use this core checkout
-	make -C $(CONTRIB_PATH) for-all CMD="go mod edit -dropreplace go.opentelemetry.io/collector"
+	make restore-contrib
 
 # List of directories where certificates are stored for unit tests.
 CERT_DIRS := config/configgrpc/testdata \
