@@ -22,7 +22,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.2
-	github.com/golangci/golangci-lint v1.31.0
+	github.com/golangci/golangci-lint v1.34.1
 	github.com/google/addlicense v0.0.0-20200622132530-df58acafd6d5
 	github.com/google/go-cmp v0.5.3
 	github.com/google/go-github v17.0.0+incompatible
@@ -60,12 +60,12 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	golang.org/x/sys v0.0.0-20201015000850-e3ed0017c211
 	golang.org/x/text v0.3.4
-	golang.org/x/tools v0.0.0-20201022035929-9cf592e881e9
+	golang.org/x/tools v0.0.0-20201121010211-780cb80bd7fb
 	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d
 	google.golang.org/grpc v1.33.2
 	google.golang.org/grpc/examples v0.0.0-20200728065043-dfc0c05b2da9 // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.4.0
 	honnef.co/go/tools v0.0.1-2020.1.6
 )
