@@ -3,7 +3,7 @@
 <p align="center">
   <strong>
     <a href="https://opentelemetry.io/docs/collector/getting-started/">Getting Started</a>
-    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+    &nbsp;&nbsp;&bull;&nbsp;
     <a href="CONTRIBUTING.md">Getting Involved</a>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="https://gitter.im/open-telemetry/opentelemetry-service">Getting In Touch</a>
