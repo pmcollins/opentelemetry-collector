@@ -12,19 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package schemagen
+package configschema
 
 import (
+	"path"
 	"reflect"
-	"testing"
-
-	"github.com/stretchr/testify/require"
+	"strings"
 )
 
-func TestFieldComments(t *testing.T) {
-	v := reflect.ValueOf(testStruct{})
-	comments := commentsForStruct(v, testEnv())
-	require.EqualValues(t, map[string]string{
-		"Duration": "embedded, package qualified\n",
-	}, comments)
+const DefaultSrcRoot = "."
+const DefaultModule = "go.opentelemetry.io/collector"
+
+type DirResolver struct {
+	SrcRoot    string
+	ModuleName string
+}
+
+func NewDefaultDirResolver() DirResolver {
+	return NewDirResolver(DefaultSrcRoot, DefaultModule)
+}
+
+func NewDirResolver(srcRoot string, moduleName string) DirResolver {
+	return DirResolver{
+		SrcRoot:    srcRoot,
+		ModuleName: moduleName,
+	}
+}
+
+func (dr DirResolver) PackageDir(t reflect.Type) string {
+	pkg := strings.TrimPrefix(t.PkgPath(), dr.ModuleName+"/")
+	return path.Join(dr.SrcRoot, pkg)
 }

@@ -12,22 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package schemagen
+package configschema
 
 import (
+	"fmt"
+
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config"
 )
 
-// createAllSchemaFiles creates config yaml schema files for all registered components
-func createAllSchemaFiles(components component.Factories, env env) {
-	cfgs := getAllConfigs(components)
-	for _, cfg := range cfgs {
-		createSchemaFile(cfg, env)
-	}
-}
-
-func getAllConfigs(components component.Factories) []config.NamedEntity {
+func GetAllConfigs(components component.Factories) []config.NamedEntity {
 	var cfgs []config.NamedEntity
 	for _, f := range components.Receivers {
 		cfgs = append(cfgs, f.CreateDefaultConfig())
@@ -42,4 +36,35 @@ func getAllConfigs(components component.Factories) []config.NamedEntity {
 		cfgs = append(cfgs, f.CreateDefaultConfig())
 	}
 	return cfgs
+}
+
+func GetConfig(components component.Factories, componentType, componentName string) (config.NamedEntity, error) {
+	t := config.Type(componentName)
+	switch componentType {
+	case "receiver":
+		c := components.Receivers[t]
+		if c == nil {
+			return nil, fmt.Errorf("unknown receiver name %q", componentName)
+		}
+		return c.CreateDefaultConfig(), nil
+	case "processor":
+		c := components.Processors[t]
+		if c == nil {
+			return nil, fmt.Errorf("unknown processor name %q", componentName)
+		}
+		return c.CreateDefaultConfig(), nil
+	case "exporter":
+		c := components.Exporters[t]
+		if c == nil {
+			return nil, fmt.Errorf("unknown exporter name %q", componentName)
+		}
+		return c.CreateDefaultConfig(), nil
+	case "extension":
+		c := components.Extensions[t]
+		if c == nil {
+			return nil, fmt.Errorf("unknown extension name %q", componentName)
+		}
+		return c.CreateDefaultConfig(), nil
+	}
+	return nil, fmt.Errorf("unknown component type %q", componentType)
 }
