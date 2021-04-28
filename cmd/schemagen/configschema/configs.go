@@ -41,25 +41,25 @@ func GetAllConfigs(components component.Factories) []config.NamedEntity {
 func GetConfig(components component.Factories, componentType, componentName string) (config.NamedEntity, error) {
 	t := config.Type(componentName)
 	switch componentType {
-	case "receiver":
+	case "receivers":
 		c := components.Receivers[t]
 		if c == nil {
 			return nil, fmt.Errorf("unknown receiver name %q", componentName)
 		}
 		return c.CreateDefaultConfig(), nil
-	case "processor":
+	case "processors":
 		c := components.Processors[t]
 		if c == nil {
 			return nil, fmt.Errorf("unknown processor name %q", componentName)
 		}
 		return c.CreateDefaultConfig(), nil
-	case "exporter":
+	case "exporters":
 		c := components.Exporters[t]
 		if c == nil {
 			return nil, fmt.Errorf("unknown exporter name %q", componentName)
 		}
 		return c.CreateDefaultConfig(), nil
-	case "extension":
+	case "extensions":
 		c := components.Extensions[t]
 		if c == nil {
 			return nil, fmt.Errorf("unknown extension name %q", componentName)

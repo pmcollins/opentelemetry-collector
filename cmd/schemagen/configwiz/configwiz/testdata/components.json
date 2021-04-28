@@ -1,0 +1,22 @@
+{
+  "pipelines": {
+    "metrics": {
+      "exporters": [
+        "logging",
+        "file"
+      ],
+      "receivers": [
+        "prometheus",
+        "opencensus"
+      ]
+    },
+    "traces": {
+      "exporters": [
+        "file"
+      ],
+      "receivers": [
+        "jaeger"
+      ]
+    }
+  }
+}

@@ -1,0 +1,35 @@
+type: '*prometheusexporter.Config'
+fields:
+- name: endpoint
+  kind: string
+  doc: |
+    The address on which the Prometheus scrape handler will be run on.
+- name: namespace
+  kind: string
+  doc: |
+    Namespace if set, exports metrics under the provided value.
+- name: const_labels
+  type: prometheus.Labels
+  kind: map
+  doc: |
+    ConstLabels are values that are applied for every exported metric.
+- name: send_timestamps
+  kind: bool
+  doc: |
+    SendTimestamps will send the underlying scrape timestamp with the export
+- name: metric_expiration
+  type: time.Duration
+  kind: int64
+  default: 5m0s
+  doc: |
+    MetricExpiration defines how long metrics are kept without updates
+- name: resource_to_telemetry_conversion
+  type: exporterhelper.ResourceToTelemetrySettings
+  kind: struct
+  doc: |
+    ResourceToTelemetrySettings defines configuration for converting resource attributes to metric labels.
+  fields:
+  - name: enabled
+    kind: bool
+    doc: |
+      Enabled indicates whether to not convert resource attributes to metric labels
