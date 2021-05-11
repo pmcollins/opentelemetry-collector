@@ -22,9 +22,9 @@ require (
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.2
-	github.com/golangci/golangci-lint v1.31.0
+	github.com/golangci/golangci-lint v1.40.0
 	github.com/google/addlicense v0.0.0-20200622132530-df58acafd6d5
-	github.com/google/go-cmp v0.5.3
+	github.com/google/go-cmp v0.5.4
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
@@ -44,13 +44,13 @@ require (
 	github.com/prometheus/common v0.14.0
 	github.com/prometheus/prometheus v1.8.2-0.20201105135750-00f16d1ac3a4
 	github.com/rs/cors v1.7.0
-	github.com/securego/gosec/v2 v2.5.0
+	github.com/securego/gosec/v2 v2.7.0
 	github.com/shirou/gopsutil v3.20.10+incompatible
 	github.com/soheilhy/cmux v0.1.4
 	github.com/spf13/cast v1.3.1
-	github.com/spf13/cobra v1.1.1
+	github.com/spf13/cobra v1.1.3
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/tcnksm/ghr v0.13.0
 	github.com/tinylib/msgp v1.1.4
 	github.com/uber/jaeger-lib v2.4.0+incompatible
@@ -58,14 +58,14 @@ require (
 	go.uber.org/atomic v1.7.0
 	go.uber.org/zap v1.16.0
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
-	golang.org/x/sys v0.0.0-20201015000850-e3ed0017c211
-	golang.org/x/text v0.3.4
-	golang.org/x/tools v0.0.0-20201022035929-9cf592e881e9
+	golang.org/x/sys v0.0.0-20210403161142-5e06dd20ab57
+	golang.org/x/text v0.3.5
+	golang.org/x/tools v0.1.1-0.20210430200834-7a6108e9b210
 	google.golang.org/genproto v0.0.0-20200904004341-0bd0a958aa1d
 	google.golang.org/grpc v1.33.2
 	google.golang.org/grpc/examples v0.0.0-20200728065043-dfc0c05b2da9 // indirect
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/square/go-jose.v2 v2.5.1 // indirect
-	gopkg.in/yaml.v2 v2.3.0
-	honnef.co/go/tools v0.0.1-2020.1.6
+	gopkg.in/yaml.v2 v2.4.0
+	honnef.co/go/tools v0.1.4
 )
