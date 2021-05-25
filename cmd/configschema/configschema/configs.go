@@ -77,49 +77,49 @@ func GetAllCfgInfos(components component.Factories) []CfgInfo {
 // GetCfgInfo accepts a Factories struct, then creates and returns the default
 // config for the component specified by the passed-in componentType and
 // componentName.
-func GetCfgInfo(components component.Factories, componentType, componentName string) (CfgInfo, error) {
+func GetCfgInfo(components component.Factories, componentGroup, componentName string) (CfgInfo, error) {
 	t := config.Type(componentName)
-	switch componentType {
+	switch componentGroup {
 	case receiver:
 		f := components.Receivers[t]
 		if f == nil {
-			return CfgInfo{}, fmt.Errorf("unknown %s name %q", componentType, componentName)
+			return CfgInfo{}, fmt.Errorf("unknown %s name %q", componentGroup, componentName)
 		}
 		return CfgInfo{
 			Type:        f.Type(),
-			Group:       componentType,
+			Group:       componentGroup,
 			CfgInstance: f.CreateDefaultConfig(),
 		}, nil
 	case processor:
 		f := components.Processors[t]
 		if f == nil {
-			return CfgInfo{}, fmt.Errorf("unknown %s name %q", componentType, componentName)
+			return CfgInfo{}, fmt.Errorf("unknown %s name %q", componentGroup, componentName)
 		}
 		return CfgInfo{
 			Type:        f.Type(),
-			Group:       componentType,
+			Group:       componentGroup,
 			CfgInstance: f.CreateDefaultConfig(),
 		}, nil
 	case exporter:
 		f := components.Exporters[t]
 		if f == nil {
-			return CfgInfo{}, fmt.Errorf("unknown %s name %q", componentType, componentName)
+			return CfgInfo{}, fmt.Errorf("unknown %s name %q", componentGroup, componentName)
 		}
 		return CfgInfo{
 			Type:        f.Type(),
-			Group:       componentType,
+			Group:       componentGroup,
 			CfgInstance: f.CreateDefaultConfig(),
 		}, nil
 	case extension:
 		f := components.Extensions[t]
 		if f == nil {
-			return CfgInfo{}, fmt.Errorf("unknown %s name %q", componentType, componentName)
+			return CfgInfo{}, fmt.Errorf("unknown %s name %q", componentGroup, componentName)
 		}
 		return CfgInfo{
 			Type:        f.Type(),
-			Group:       componentType,
+			Group:       componentGroup,
 			CfgInstance: f.CreateDefaultConfig(),
 		}, nil
 	}
-	return CfgInfo{}, fmt.Errorf("unknown component type %q", componentType)
+	return CfgInfo{}, fmt.Errorf("unknown component type %q", componentGroup)
 }
