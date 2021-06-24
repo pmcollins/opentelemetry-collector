@@ -52,7 +52,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
 	github.com/tcnksm/ghr v0.13.0
-	github.com/tinylib/msgp v1.1.4
+	github.com/tinylib/msgp v1.1.6
 	github.com/uber/jaeger-lib v2.4.0+incompatible
 	go.opencensus.io v0.22.5
 	go.uber.org/atomic v1.7.0
