@@ -86,9 +86,17 @@ func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 func handleField(p indentingPrinter, field *configschema.Field, out map[string]interface{}) {
 	p.println("Field: " + field.Name)
 	typ := resolveType(field)
+
+
 	if typ != "" {
-		p.println("Type:  " + typ)
+		p.print("Type:  " + typ)
+		if typ == "time.Duration" {
+			p.print(" (examples: 1h2m3s, 5m10s, 45s)")
+		}
+		p.print("\n")
+
 	}
+
 	if field.Doc != "" {
 		p.println("Docs:  " + strings.ReplaceAll(field.Doc, "\n", " "))
 	}
