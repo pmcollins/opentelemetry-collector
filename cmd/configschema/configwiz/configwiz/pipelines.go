@@ -25,6 +25,8 @@ import (
 	"go.opentelemetry.io/collector/component/componenterror"
 )
 
+const invalid string = "Invalid input. Try again."
+
 func pipelinesWizard(factories component.Factories) map[string]interface{} {
 	out := map[string]interface{}{}
 	for {
@@ -58,19 +60,19 @@ func singlePipelineWizard(factories component.Factories) (string, rpe) {
 	case "":
 		return "", rpe{}
 	case "1":
-		return pipelineTypeWizard("metrics", receiverNames(factories, isMetricsReceiver), exporterNames(factories, isMetricsExporter))
+		return pipelineTypeWizard("metrics", receiverNames(factories, isMetricsReceiver), processorNames(factories, isMetricProcessor), exporterNames(factories, isMetricsExporter))
 	case "2":
-		return pipelineTypeWizard("traces", receiverNames(factories, isTracesReceiver), exporterNames(factories, isTracesExporter))
+		return pipelineTypeWizard("traces", receiverNames(factories, isTracesReceiver), processorNames(factories, isTracesProcessor), exporterNames(factories, isTracesExporter))
 	}
-	fmt.Println("Invalid input. Try again.")
+	fmt.Println(invalid)
 	return singlePipelineWizard(factories)
-	//return "", rpe{}
 }
 
 // pipelineTypeWizard for a given pipelineType (e.g. "metrics", "traces")
 func pipelineTypeWizard(
 	pipelineType string,
 	metricsReceiverNames []string,
+	metricsProcessorsNames []string,
 	tracesReceiverNames []string,
 ) (string, rpe) {
 	fmt.Printf("%s pipeline extended name (optional) > ", strings.Title(pipelineType))
@@ -81,13 +83,14 @@ func pipelineTypeWizard(
 	}
 	fmt.Printf("Pipeline %q\n", name)
 	pr := indentingPrinter{level: 1}
-	rpe := rpeWizard(pr, metricsReceiverNames, tracesReceiverNames)
+	rpe := rpeWizard(pr, metricsReceiverNames, metricsProcessorsNames, tracesReceiverNames)
 	return name, rpe
 }
 
-func rpeWizard(pr indentingPrinter, receiverNames []string, exporterNames []string) rpe {
+func rpeWizard(pr indentingPrinter, receiverNames []string, processorNames []string, exporterNames []string) rpe {
 	out := rpe{}
 	out.Receivers = componentListWizard(pr, "receiver", receiverNames)
+	out.Processors = componentListWizard(pr, "processor", processorNames)
 	out.Exporters = componentListWizard(pr, "exporter", exporterNames)
 	return out
 }
@@ -125,7 +128,7 @@ func componentNameWizard(pr indentingPrinter, componentType string, componentNam
 	}
 	i, _ := strconv.Atoi(choice)
 	if i < 0 || i > len(componentNames)-1 {
-		fmt.Println("Index passed in is out of range. Try again.")
+		fmt.Println(invalid)
 		return componentNameWizard(pr, componentType, componentNames)
 	}
 	key := componentNames[i]
@@ -134,6 +137,8 @@ func componentNameWizard(pr indentingPrinter, componentType string, componentNam
 }
 
 type receiverFactoryTest func(factory component.ReceiverFactory) bool
+
+type processorFactoryTest func(factory component.ProcessorFactory) bool
 
 type exporterFactoryTest func(factory component.ExporterFactory) bool
 
@@ -165,6 +170,27 @@ func isMetricsReceiver(f component.ReceiverFactory) bool {
 		f.CreateDefaultConfig(),
 		nil,
 	)
+	return err != componenterror.ErrDataTypeIsNotSupported
+}
+
+func processorNames(c component.Factories, test processorFactoryTest) []string {
+	var processors []string
+
+	for k, v := range c.Processors {
+		if k != "filter" && test(v) {
+			processors = append(processors, string(k))
+		}
+	}
+	return processors
+}
+
+func isMetricProcessor(f component.ProcessorFactory) bool {
+	_, err := f.CreateMetricsProcessor(context.Background(), component.ProcessorCreateParams{}, f.CreateDefaultConfig(), nil)
+	return err != componenterror.ErrDataTypeIsNotSupported
+}
+
+func isTracesProcessor(f component.ProcessorFactory) bool {
+	_, err := f.CreateMetricsProcessor(context.Background(), component.ProcessorCreateParams{}, f.CreateDefaultConfig(), nil)
 	return err != componenterror.ErrDataTypeIsNotSupported
 }
 

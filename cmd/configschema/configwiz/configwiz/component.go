@@ -33,6 +33,9 @@ func serviceToComponentNames(service map[string]interface{}) map[string][]string
 			for _, receiver := range r.Receivers {
 				out["receiver"] = append(out["receiver"], receiver)
 			}
+			for _, processor := range r.Processors {
+				out["processor"] = append(out["processor"], processor)
+			}
 			for _, exporter := range r.Exporters {
 				out["exporter"] = append(out["exporter"], exporter)
 			}
@@ -50,8 +53,15 @@ func handleComponent(
 ) {
 	typeMap := map[string]interface{}{}
 	m[componentGroup+"s"] = typeMap
+	var err error
+	var cfgInfo configschema.CfgInfo
 	for _, name := range names {
-		cfgInfo, err := configschema.GetCfgInfo(factories, componentGroup, name)
+		if strings.Contains(name, "/") {
+			compName := strings.Split(name, "/")[0]
+			cfgInfo, err = configschema.GetCfgInfo(factories, componentGroup, compName)
+		} else {
+			cfgInfo, err = configschema.GetCfgInfo(factories, componentGroup, name)
+		}
 		if err != nil {
 			panic(err)
 		}
@@ -86,17 +96,13 @@ func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 func handleField(p indentingPrinter, field *configschema.Field, out map[string]interface{}) {
 	p.println("Field: " + field.Name)
 	typ := resolveType(field)
-
-
 	if typ != "" {
 		p.print("Type:  " + typ)
 		if typ == "time.Duration" {
-			p.print(" (examples: 1h2m3s, 5m10s, 45s)")
+			fmt.Print(" (examples: 1h2m3s, 5m10s, 45s)")
 		}
 		p.print("\n")
-
 	}
-
 	if field.Doc != "" {
 		p.println("Docs:  " + strings.ReplaceAll(field.Doc, "\n", " "))
 	}
@@ -108,7 +114,6 @@ func handleField(p indentingPrinter, field *configschema.Field, out map[string]i
 	if field.Default != nil {
 		defaultVal = fmt.Sprintf("%v", field.Default)
 	}
-
 	in := readline(defaultVal)
 	if in == "" {
 		return
