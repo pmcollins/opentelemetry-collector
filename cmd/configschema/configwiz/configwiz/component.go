@@ -33,9 +33,6 @@ func serviceToComponentNames(service map[string]interface{}) map[string][]string
 			for _, receiver := range r.Receivers {
 				out["receiver"] = append(out["receiver"], receiver)
 			}
-			for _, processor := range r.Processors {
-				out["processor"] = append(out["processor"], processor)
-			}
 			for _, exporter := range r.Exporters {
 				out["exporter"] = append(out["exporter"], exporter)
 			}
