@@ -36,14 +36,6 @@ func CLI(factories component.Factories) {
 		handleComponent(factories, m, componentGroup, names, dr)
 	}
 
-	/*
-	We are having a problem with the order in which the config file is being outputted
-	Maps key values are automatically sorted alphabetically -> we need it in the order of the pipeline
-
-	Because we have to output this to a file, can we just take care of it then by checking the
-	bytes that we are about to print out? Possibly save the offset of string to get to the starting byte?
-	Might not be the best way to go about this, will figure something out.
-	 */
 	bytes, _ := yaml.Marshal(m)
 	fmt.Println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
 	fmt.Println(string(bytes))
