@@ -56,15 +56,10 @@ func handleComponent(
 ) {
 	typeMap := map[string]interface{}{}
 	m[componentGroup+"s"] = typeMap
-	var err error
-	var cfgInfo configschema.CfgInfo
+	//var err error
+	//var cfgInfo configschema.CfgInfo
 	for _, name := range names {
-		if strings.Contains(name, "/") {
-			compName := strings.Split(name, "/")[0]
-			cfgInfo, err = configschema.GetCfgInfo(factories, componentGroup, compName)
-		} else {
-			cfgInfo, err = configschema.GetCfgInfo(factories, componentGroup, name)
-		}
+		cfgInfo, err := configschema.GetCfgInfo(factories, componentGroup, strings.Split(name, "/")[0])
 		if err != nil {
 			panic(err)
 		}
@@ -100,11 +95,11 @@ func handleField(p indentingPrinter, field *configschema.Field, out map[string]i
 	p.println("Field: " + field.Name)
 	typ := resolveType(field)
 	if typ != "" {
-		p.print("Type:  " + typ)
+		typString := "Type: " + typ
 		if typ == "time.Duration" {
-			fmt.Print(" (examples: 1h2m3s, 5m10s, 45s)")
+			typString += " (examples: 1h2m3s, 5m10s, 45s)"
 		}
-		p.print("\n")
+		p.println(typString)
 	}
 	if field.Doc != "" {
 		p.println("Docs:  " + strings.ReplaceAll(field.Doc, "\n", " "))
