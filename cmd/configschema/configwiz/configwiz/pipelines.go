@@ -25,7 +25,7 @@ import (
 	"go.opentelemetry.io/collector/component/componenterror"
 )
 
-const invalid string = "Invalid input. Try again."
+const invalidMsg = "Invalid input. Try again."
 
 func pipelinesWizard(factories component.Factories) map[string]interface{} {
 	out := map[string]interface{}{}
@@ -72,7 +72,7 @@ func singlePipelineWizard(factories component.Factories) (string, rpe) {
 			exporterNames(factories, isTracesExporter),
 			extensionNames(factories, isExtension))
 	}
-	fmt.Println(invalid)
+	fmt.Println(invalidMsg)
 	return singlePipelineWizard(factories)
 }
 
@@ -139,7 +139,7 @@ func componentNameWizard(pr indentingPrinter, componentType string, componentNam
 	}
 	i, _ := strconv.Atoi(choice)
 	if i < 0 || i > len(componentNames)-1 {
-		fmt.Println(invalid)
+		fmt.Println(invalidMsg)
 		return componentNameWizard(pr, componentType, componentNames)
 	}
 	key := componentNames[i]
