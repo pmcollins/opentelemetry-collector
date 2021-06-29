@@ -50,8 +50,6 @@ func handleComponent(
 ) {
 	typeMap := map[string]interface{}{}
 	m[componentGroup+"s"] = typeMap
-	//var err error
-	//var cfgInfo configschema.CfgInfo
 	for _, name := range names {
 		cfgInfo, err := configschema.GetCfgInfo(factories, componentGroup, strings.Split(name, "/")[0])
 		if err != nil {
