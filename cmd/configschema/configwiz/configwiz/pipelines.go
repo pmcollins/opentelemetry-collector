@@ -79,10 +79,10 @@ func singlePipelineWizard(factories component.Factories) (string, rpe) {
 // pipelineTypeWizard for a given pipelineType (e.g. "metrics", "traces")
 func pipelineTypeWizard(
 	pipelineType string,
-	ReceiverNames []string,
-	ProcessorsNames []string,
-	ExporterNames []string,
-	ExtensionNames []string,
+	receivers []string,
+	processors []string,
+	exporters []string,
+	extensions []string,
 ) (string, rpe) {
 	fmt.Printf("%s pipeline extended name (optional) > ", strings.Title(pipelineType))
 	name := pipelineType
@@ -92,7 +92,7 @@ func pipelineTypeWizard(
 	}
 	fmt.Printf("Pipeline %q\n", name)
 	pr := indentingPrinter{level: 1}
-	rpe := rpeWizard(pr, ReceiverNames, ProcessorsNames, ExporterNames, ExtensionNames)
+	rpe := rpeWizard(pr, receivers, processors, exporters, extensions)
 	return name, rpe
 }
 
