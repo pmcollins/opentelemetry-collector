@@ -51,7 +51,7 @@ func handleComponent(
 	typeMap := map[string]interface{}{}
 	m[componentGroup+"s"] = typeMap
 	for _, name := range names {
-		cfgInfo, err := configschema.GetCfgInfo(factories, componentGroup, name)
+		cfgInfo, err := configschema.GetCfgInfo(factories, componentGroup, strings.Split(name, "/")[0])
 		if err != nil {
 			panic(err)
 		}
@@ -87,7 +87,11 @@ func handleField(p indentingPrinter, field *configschema.Field, out map[string]i
 	p.println("Field: " + field.Name)
 	typ := resolveType(field)
 	if typ != "" {
-		p.println("Type:  " + typ)
+		typString := "Type: " + typ
+		if typ == "time.Duration" {
+			typString += " (examples: 1h2m3s, 5m10s, 45s)"
+		}
+		p.println(typString)
 	}
 	if field.Doc != "" {
 		p.println("Docs:  " + strings.ReplaceAll(field.Doc, "\n", " "))
@@ -100,7 +104,6 @@ func handleField(p indentingPrinter, field *configschema.Field, out map[string]i
 	if field.Default != nil {
 		defaultVal = fmt.Sprintf("%v", field.Default)
 	}
-
 	in := readline(defaultVal)
 	if in == "" {
 		return
