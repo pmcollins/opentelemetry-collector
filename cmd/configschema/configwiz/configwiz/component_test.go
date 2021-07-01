@@ -17,8 +17,6 @@ package configwiz
 import (
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/cmd/configschema/configschema"
-	"io/ioutil"
-	"os"
 	"testing"
 )
 
@@ -36,14 +34,17 @@ type fakeWriter struct {
 }
 
 func (w *fakeWriter) write(s string) {
-	w.programOutput = s
+	w.programOutput += s
 }
 
+func (w *fakeWriter) writeln(s string) {
+	w.programOutput += s + "\n"
+}
 
 func TestHandleField(t *testing.T) {
 	writer := fakeWriter{ip: indentingPrinter{level: 0}}
 	reader := fakeReader{}
-	io := clio{writer.ip, reader.read}
+	io := clio{writer.writeln, writer.write, reader.read}
 	out := map[string]interface{}{}
 	cfgField := configschema.Field{
 		Name:    "testHandleField",
@@ -53,20 +54,9 @@ func TestHandleField(t *testing.T) {
 		Doc:     "We are testing HandleField",
 		Fields:  nil,
 	}
-	// piping stdout to program
-	rescueStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
 	handleField(io, &cfgField, out)
-
-	w.Close()
-	output, _ := ioutil.ReadAll(r)
-	os.Stdout = rescueStdout
-
-	expectedField := "Field: " + cfgField.Name + "\nType: " + cfgField.Type + "\nDocs: " + cfgField.Doc + "\n> "
-	assert.Equal(t, expectedField, string(output))
-
+	expected:= "Field: " + cfgField.Name + "\nType: " + cfgField.Type + "\nDocs: " + cfgField.Doc + "\n> "
+	assert.Equal(t, expected, writer.programOutput)
 }
 
 func TestParseCSV(t *testing.T) {
@@ -76,4 +66,3 @@ func TestParseCSV(t *testing.T) {
 	assert.Equal(t, expected, parseCSV(" a , b , c "))
 	assert.Equal(t, []string{"a"}, parseCSV(" a "))
 }
-
