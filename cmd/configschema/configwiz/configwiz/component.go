@@ -39,6 +39,9 @@ func serviceToComponentNames(service map[string]interface{}) map[string][]string
 			for _, exporter := range r.Exporters {
 				out["exporter"] = append(out["exporter"], exporter)
 			}
+			for _, extension := range r.Extensions {
+				out["extension"] = append(out["extension"], extension)
+			}
 		}
 	}
 	return out

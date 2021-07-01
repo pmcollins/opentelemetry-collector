@@ -60,9 +60,17 @@ func singlePipelineWizard(factories component.Factories) (string, rpe) {
 	case "":
 		return "", rpe{}
 	case "1":
-		return pipelineTypeWizard("metrics", receiverNames(factories, isMetricsReceiver), processorNames(factories, isMetricProcessor), exporterNames(factories, isMetricsExporter))
+		return pipelineTypeWizard("metrics",
+			receiverNames(factories, isMetricsReceiver),
+			processorNames(factories, isMetricProcessor),
+			exporterNames(factories, isMetricsExporter),
+			extensionNames(factories, isExtension))
 	case "2":
-		return pipelineTypeWizard("traces", receiverNames(factories, isTracesReceiver), processorNames(factories, isTracesProcessor), exporterNames(factories, isTracesExporter))
+		return pipelineTypeWizard("traces",
+			receiverNames(factories, isTracesReceiver),
+			processorNames(factories, isTracesProcessor),
+			exporterNames(factories, isTracesExporter),
+			extensionNames(factories, isExtension))
 	}
 	fmt.Println(invalidMsg)
 	return singlePipelineWizard(factories)
@@ -71,9 +79,10 @@ func singlePipelineWizard(factories component.Factories) (string, rpe) {
 // pipelineTypeWizard for a given pipelineType (e.g. "metrics", "traces")
 func pipelineTypeWizard(
 	pipelineType string,
-	metricsReceiverNames []string,
-	metricsProcessorsNames []string,
-	tracesReceiverNames []string,
+	receivers []string,
+	processors []string,
+	exporters []string,
+	extensions []string,
 ) (string, rpe) {
 	fmt.Printf("%s pipeline extended name (optional) > ", strings.Title(pipelineType))
 	name := pipelineType
@@ -83,15 +92,16 @@ func pipelineTypeWizard(
 	}
 	fmt.Printf("Pipeline %q\n", name)
 	pr := indentingPrinter{level: 1}
-	rpe := rpeWizard(pr, metricsReceiverNames, metricsProcessorsNames, tracesReceiverNames)
+	rpe := rpeWizard(pr, receivers, processors, exporters, extensions)
 	return name, rpe
 }
 
-func rpeWizard(pr indentingPrinter, receiverNames []string, processorNames []string, exporterNames []string) rpe {
+func rpeWizard(pr indentingPrinter, receiverNames []string, processorNames []string, exporterNames []string, extensionNames []string) rpe {
 	out := rpe{}
 	out.Receivers = componentListWizard(pr, "receiver", receiverNames)
 	out.Processors = componentListWizard(pr, "processor", processorNames)
 	out.Exporters = componentListWizard(pr, "exporter", exporterNames)
+	out.Extensions = componentListWizard(pr, "extension", extensionNames)
 	return out
 }
 
@@ -99,6 +109,7 @@ type rpe struct {
 	Receivers  []string
 	Processors []string
 	Exporters  []string
+	Extensions []string
 }
 
 func componentListWizard(pr indentingPrinter, componentGroup string, componentNames []string) (out []string) {
@@ -141,6 +152,8 @@ type receiverFactoryTest func(factory component.ReceiverFactory) bool
 type exporterFactoryTest func(factory component.ExporterFactory) bool
 
 type processorFactoryTest func(factory component.ProcessorFactory) bool
+
+type extensionFactoryTest func(factory component.ExtensionFactory) bool
 
 func receiverNames(c component.Factories, test receiverFactoryTest) []string {
 	var keys []string
@@ -212,5 +225,20 @@ func isMetricsExporter(f component.ExporterFactory) bool {
 
 func isTracesExporter(f component.ExporterFactory) bool {
 	_, err := f.CreateTracesExporter(context.Background(), component.ExporterCreateParams{}, f.CreateDefaultConfig())
+	return err != componenterror.ErrDataTypeIsNotSupported
+}
+
+func extensionNames(c component.Factories, test extensionFactoryTest) []string {
+	var extensions []string
+	for k, v := range c.Extensions {
+		if test(v) {
+			extensions = append(extensions, string(k))
+		}
+	}
+	return extensions
+}
+
+func isExtension(f component.ExtensionFactory) bool {
+	_, err := f.CreateExtension(context.Background(), component.ExtensionCreateParams{}, f.CreateDefaultConfig())
 	return err != componenterror.ErrDataTypeIsNotSupported
 }
