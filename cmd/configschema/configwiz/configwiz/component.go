@@ -69,9 +69,8 @@ func handleComponent(
 
 func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 	out := map[string]interface{}{}
-	p := indentingPrinter2{level: lvl}
 	io := clio{printLine, readline}
-	p.write = io.write
+	p := io.newIndentingPrinter(lvl)
 	for _, field := range f.Fields {
 		if field.Name == "squash" {
 			componentWizard(lvl, field)
@@ -146,9 +145,4 @@ func resolveType(f *configschema.Field) string {
 		return f.Type
 	}
 	return f.Kind
-}
-
-type clio struct {
-	write func(s string)
-	read  func(defaultVal string) string
 }

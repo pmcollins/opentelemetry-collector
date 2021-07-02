@@ -40,8 +40,7 @@ func TestHandleField(t *testing.T) {
 	writer := fakeWriter{}
 	reader := fakeReader{}
 	io := clio{writer.write, reader.read}
-	p := indentingPrinter2{level: 0}
-	p.write = io.write
+	p := io.newIndentingPrinter(0)
 	out := map[string]interface{}{}
 	cfgField := configschema.Field{
 		Name:    "testHandleField",
