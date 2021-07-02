@@ -32,20 +32,16 @@ type fakeWriter struct {
 	programOutput string
 }
 
-func (w *fakeWriter) write(s string, nextLine bool) {
-	if nextLine {
-		w.programOutput += s + "\n"
-	} else {
-		w.programOutput += s
-	}
+func (w *fakeWriter) write(s string) {
+	w.programOutput += s
 }
 
 func TestHandleField(t *testing.T) {
 	writer := fakeWriter{}
 	reader := fakeReader{}
-	lvl := 0
-	writerPointer := writer.write
-	io := clio{&writerPointer, &lvl, reader.read}
+	io := clio{writer.write, reader.read}
+	p := indentingPrinter{level: 0}
+	p.write = io.write
 	out := map[string]interface{}{}
 	cfgField := configschema.Field{
 		Name:    "testHandleField",
@@ -55,7 +51,7 @@ func TestHandleField(t *testing.T) {
 		Doc:     "We are testing HandleField",
 		Fields:  nil,
 	}
-	handleField(io, &cfgField, out)
+	handleField(p, io, &cfgField, out)
 	expected := "Field: " + cfgField.Name + "\nType: " + cfgField.Type + "\nDocs: " + cfgField.Doc + "\n> "
 	assert.Equal(t, expected, writer.programOutput)
 }

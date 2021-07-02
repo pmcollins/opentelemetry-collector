@@ -21,15 +21,11 @@ import (
 
 type indentingPrinter struct {
 	level int
-	write func(s string, newLine bool)
+	write func(s string)
 }
 
-func (p *indentingPrinter) ioWrite(s string, newLine bool) {
-	if newLine {
-		p.println(s)
-	} else {
-		p.print(s)
-	}
+func printLine(s string) {
+	fmt.Print(s)
 }
 
 func (p indentingPrinter) println(s string) {
@@ -43,5 +39,5 @@ func (p indentingPrinter) print(s string) {
 func (p indentingPrinter) doPrint(s string, frmt string) {
 	const tabSize = 4
 	indent := p.level * tabSize
-	fmt.Printf(frmt, strings.Repeat(" ", indent), s)
+	p.write(fmt.Sprintf(frmt, strings.Repeat(" ", indent), s))
 }

@@ -70,6 +70,8 @@ func handleComponent(
 func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 	out := map[string]interface{}{}
 	p := indentingPrinter{level: lvl}
+	io := clio{printLine, readline}
+	p.write = io.write
 	for _, field := range f.Fields {
 		if field.Name == "squash" {
 			componentWizard(lvl, field)
@@ -83,32 +85,29 @@ func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 				out[field.Name] = componentWizard(lvl+1, field)
 			}
 		} else {
-			p.write = p.ioWrite
-			io := clio{&p.write, &p.level, readline}
-			handleField(io, field, out)
+			handleField(p, io, field, out)
 		}
 	}
 	return out
 }
 
-func handleField(io clio, field *configschema.Field, out map[string]interface{}) {
-	writer := *io.write
-	writer("Field: "+field.Name, true)
+func handleField(p indentingPrinter, io clio, field *configschema.Field, out map[string]interface{}) {
+	p.println("Field: " + field.Name)
 	typ := resolveType(field)
 	if typ != "" {
 		typString := "Type: " + typ
 		if typ == "time.Duration" {
 			typString += " (examples: 1h2m3s, 5m10s, 45s)"
 		}
-		writer(typString, true)
+		p.println(typString)
 	}
 	if field.Doc != "" {
-		writer("Docs: "+strings.ReplaceAll(field.Doc, "\n", " "), true)
+		p.println("Docs: " + strings.ReplaceAll(field.Doc, "\n", " "))
 	}
 	if field.Default != nil {
-		writer(fmt.Sprintf("Default (enter to accept): %v", field.Default), true)
+		p.println(fmt.Sprintf("Default (enter to accept): %v", field.Default))
 	}
-	writer("> ", false)
+	p.print("> ")
 	defaultVal := ""
 	if field.Default != nil {
 		defaultVal = fmt.Sprintf("%v", field.Default)
@@ -150,7 +149,6 @@ func resolveType(f *configschema.Field) string {
 }
 
 type clio struct {
-	write *func(s string, newLine bool)
-	level *int
+	write func(s string)
 	read  func(defaultVal string) string
 }
