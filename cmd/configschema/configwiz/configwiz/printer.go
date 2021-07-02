@@ -21,6 +21,15 @@ import (
 
 type indentingPrinter struct {
 	level int
+	write func(s string, newLine bool)
+}
+
+func (p *indentingPrinter) ioWrite(s string, newLine bool) {
+	if newLine {
+		p.println(s)
+	} else {
+		p.print(s)
+	}
 }
 
 func (p indentingPrinter) println(s string) {

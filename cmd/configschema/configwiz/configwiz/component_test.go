@@ -30,21 +30,22 @@ func (r fakeReader) read(defaultVal string) string {
 
 type fakeWriter struct {
 	programOutput string
-	ip            indentingPrinter
 }
 
-func (w *fakeWriter) write(s string) {
-	w.programOutput += s
-}
-
-func (w *fakeWriter) writeln(s string) {
-	w.programOutput += s + "\n"
+func (w *fakeWriter) write(s string, nextLine bool) {
+	if nextLine {
+		w.programOutput += s + "\n"
+	} else {
+		w.programOutput += s
+	}
 }
 
 func TestHandleField(t *testing.T) {
-	writer := fakeWriter{ip: indentingPrinter{level: 0}}
+	writer := fakeWriter{}
 	reader := fakeReader{}
-	io := clio{writer.writeln, writer.write, reader.read}
+	lvl := 0
+	writerPointer := writer.write
+	io := clio{&writerPointer, &lvl, reader.read}
 	out := map[string]interface{}{}
 	cfgField := configschema.Field{
 		Name:    "testHandleField",
@@ -55,7 +56,7 @@ func TestHandleField(t *testing.T) {
 		Fields:  nil,
 	}
 	handleField(io, &cfgField, out)
-	expected:= "Field: " + cfgField.Name + "\nType: " + cfgField.Type + "\nDocs: " + cfgField.Doc + "\n> "
+	expected := "Field: " + cfgField.Name + "\nType: " + cfgField.Type + "\nDocs: " + cfgField.Doc + "\n> "
 	assert.Equal(t, expected, writer.programOutput)
 }
 
