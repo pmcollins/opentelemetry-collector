@@ -19,13 +19,30 @@ import (
 	"strings"
 )
 
-type indentingPrinter struct {
+func printLine(s string) {
+	fmt.Print(s)
+}
+
+type indentingPrinter2 struct {
 	level int
 	write func(s string)
 }
 
-func printLine(s string) {
-	fmt.Print(s)
+func (p indentingPrinter2) println(s string) {
+	p.doPrint(s, "%s%s\n")
+}
+func (p indentingPrinter2) print(s string) {
+	p.doPrint(s, "%s%s")
+}
+
+func (p indentingPrinter2) doPrint(s string, frmt string) {
+	const tabSize = 4
+	indent := p.level * tabSize
+	p.write(fmt.Sprintf(frmt, strings.Repeat(" ", indent), s))
+}
+
+type indentingPrinter struct {
+	level int
 }
 
 func (p indentingPrinter) println(s string) {
@@ -39,5 +56,5 @@ func (p indentingPrinter) print(s string) {
 func (p indentingPrinter) doPrint(s string, frmt string) {
 	const tabSize = 4
 	indent := p.level * tabSize
-	p.write(fmt.Sprintf(frmt, strings.Repeat(" ", indent), s))
+	fmt.Printf(frmt, strings.Repeat(" ", indent), s)
 }

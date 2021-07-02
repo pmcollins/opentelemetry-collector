@@ -92,7 +92,6 @@ func pipelineTypeWizard(
 	}
 	fmt.Printf("Pipeline %q\n", name)
 	pr := indentingPrinter{level: 1}
-	pr.write = printLine // Program breaks w/o this. Will update in later PR.
 	rpe := rpeWizard(pr, receivers, processors, exporters, extensions)
 	return name, rpe
 }

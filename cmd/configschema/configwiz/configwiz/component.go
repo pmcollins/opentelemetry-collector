@@ -69,7 +69,7 @@ func handleComponent(
 
 func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 	out := map[string]interface{}{}
-	p := indentingPrinter{level: lvl}
+	p := indentingPrinter2{level: lvl}
 	io := clio{printLine, readline}
 	p.write = io.write
 	for _, field := range f.Fields {
@@ -91,7 +91,7 @@ func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 	return out
 }
 
-func handleField(p indentingPrinter, io clio, field *configschema.Field, out map[string]interface{}) {
+func handleField(p indentingPrinter2, io clio, field *configschema.Field, out map[string]interface{}) {
 	p.println("Field: " + field.Name)
 	typ := resolveType(field)
 	if typ != "" {
