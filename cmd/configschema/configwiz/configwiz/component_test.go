@@ -46,13 +46,14 @@ func TestHandleField(t *testing.T) {
 	cfgField := configschema.Field{
 		Name:    "testHandleField",
 		Type:    "test",
-		Kind:    "string",
-		Default: nil,
+		Kind:    "[]string",
+		Default: "default",
 		Doc:     "We are testing HandleField",
 		Fields:  nil,
 	}
 	handleField(p, io, &cfgField, out)
-	expected := "Field: " + cfgField.Name + "\nType: " + cfgField.Type + "\nDocs: " + cfgField.Doc + "\n> "
+	expected := "Field: " + cfgField.Name + "\nType: " + cfgField.Type + "\nDocs: " + cfgField.Doc
+	expected += "\nDefault (enter to accept): default" + "\n> "
 	assert.Equal(t, expected, writer.programOutput)
 }
 
