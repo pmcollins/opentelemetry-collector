@@ -15,10 +15,14 @@
 package configwiz
 
 import (
-	"github.com/stretchr/testify/assert"
-	"go.opentelemetry.io/collector/cmd/configschema/configschema"
+	"fmt"
 	"strings"
 	"testing"
+
+	"go.opentelemetry.io/collector/cmd/configschema/configschema"
+
+	"github.com/stretchr/testify/assert"
+
 )
 
 type fakeReader struct {
@@ -37,6 +41,26 @@ func (w *fakeWriter) write(s string) {
 	w.programOutput += s
 }
 
+func buildExpectedOutput(indent int, prefix string, name string, typ string, defaultStr bool, doc string) string {
+	const tabSize = 4
+	space := indent * tabSize
+	tab := strings.Repeat(" ", space)
+	if name != "" {
+		prefix += fmt.Sprintf(tab + "Field: %s\n", name)
+	}
+	if typ != "" {
+		prefix += fmt.Sprintf(tab + "Type: %s\n", typ)
+	}
+	if doc != "" {
+		prefix += fmt.Sprintf(tab + "Docs: %s\n", doc)
+	}
+	if defaultStr {
+		prefix += tab + "Default (enter to accept): defaultStr1\n"
+	}
+	prefix += tab + "> "
+	return prefix
+}
+
 func buildTestCFGFields(name string, typ string, kind string, defaultStr string, doc string) (cfgField configschema.Field) {
 	var fields []*configschema.Field
 	cfgField2 := configschema.Field{
@@ -48,7 +72,6 @@ func buildTestCFGFields(name string, typ string, kind string, defaultStr string,
 		Fields:  nil,
 	}
 	fields = append(fields, &cfgField2)
-
 	cfgField = configschema.Field{
 		Name:    name,
 		Type:    typ,
@@ -68,7 +91,6 @@ func runCompWizardSquash(io clio) configschema.Field {
 		"defaultStr",
 		"testing CompWizard squash",
 	)
-
 	newField := buildTestCFGFields(
 		"squash",
 		"test",
@@ -98,7 +120,6 @@ func runCompWizardStruct(io clio) configschema.Field {
 		"defaultStr",
 		"Testing comp Wizard struct case",
 	)
-
 	var fields []*configschema.Field
 	fields = append(fields, &newField)
 	cfgField.Fields = fields
@@ -119,7 +140,7 @@ func runCompWizardPtr(io clio) configschema.Field {
 		"testPtr",
 		"test",
 		"ptr",
-		"defaultPtr",
+		"defaultStr",
 		"testing compWizard ptr case",
 		)
 	var fields []*configschema.Field
@@ -134,7 +155,7 @@ func runCompWizardHandleField(io clio) configschema.Field {
 		"testCompWizard",
 		"test",
 		"[]string",
-		"default",
+		"defaultStr",
 		"testing CompWizard handleField",
 	)
 	componentWizard(io, 0, &cfgField)
@@ -149,35 +170,34 @@ func TestComponentWizard(t *testing.T) {
 	ioSquash := clio{writerSquash.write, fakeReader{}.read}
 	cfgSquash := runCompWizardSquash(ioSquash)
 	currSquash := cfgSquash.Fields[0].Fields[0]
-	expectedSquash := "Field: " + currSquash.Name + "\nType: " + currSquash.Type + "\n"
-	expectedSquash += "Docs: " + currSquash.Doc + "\nDefault (enter to accept): defaultStr1\n> "
-	//assert.Equal(t, expectedSquash, writerSquash.programOutput)
+	expectedSquash := buildExpectedOutput(0, "", currSquash.Name, currSquash.Type, true, currSquash.Doc)
+	assert.Equal(t, expectedSquash, writerSquash.programOutput)
 
 	//else if field.kind == "struct"
 	writerStruct := fakeWriter{}
 	ioStruct := clio{writerStruct.write, fakeReader{}.read}
 	cfgStruct := runCompWizardStruct(ioStruct)
-	tab := strings.Repeat(" ", 4)
 	currStruct := cfgStruct.Fields[0].Fields[0]
-	expectedStruct := string(cfgStruct.Fields[0].Name) + "\n" + tab + "Field: " + currStruct.Name + "\n"
-	expectedStruct += tab + "Type: " + currStruct.Type + "\n" + tab + "Docs: " + currStruct.Doc + "\n"
-	expectedStruct += tab + "Default (enter to accept): defaultStr1\n" + tab + "> "
-	//assert.Equal(t, expectedStruct, writerStruct.programOutput)
+	expectedStruct := fmt.Sprintf("%s\n", cfgStruct.Fields[0].Name)
+	expectedStruct = buildExpectedOutput(1, expectedStruct, currStruct.Name, currStruct.Type, true, currStruct.Doc)
+	assert.Equal(t, expectedStruct, writerStruct.programOutput)
 
-	//else if field.kind == "ptr" FIXME
+	//else if field.kind == "ptr"
 	writerPtr := fakeWriter{}
 	ioPtr := clio{writerPtr.write, fakeReader{"n"}.read}
-	//cfgPtr := runCompWizardPtr(ioPtr)
-	runCompWizardPtr(ioPtr)
-	assert.Equal(t, "", writerPtr.programOutput)
+	cfgPtr := runCompWizardPtr(ioPtr)
+	ptr := cfgPtr.Fields[0].Fields[0]
+	expectedPtr := fmt.Sprintf("%s (optional) skip (Y/n)> ", string(cfgPtr.Fields[0].Name))
+	expectedPtr = buildExpectedOutput(1, expectedPtr, ptr.Name, ptr.Type, true, ptr.Doc)
+	assert.Equal(t, expectedPtr, writerPtr.programOutput)
+
 	//else
 	writerHandle := fakeWriter{}
 	ioHandle := clio{writerHandle.write, fakeReader{}.read}
 	cfgHandle := runCompWizardHandleField(ioHandle)
-	expectedHandle := "Field: " + cfgHandle.Fields[0].Name + "\nType: " + cfgHandle.Fields[0].Type + "\n"
-	expectedHandle += "Docs: " + cfgHandle.Fields[0].Doc + "\nDefault (enter to accept): default1\n> "
-	//assert.Equal(t, expectedHandle, writerHandle.programOutput)
-
+	field := cfgHandle.Fields[0]
+	expectedHandle := buildExpectedOutput(0, "", field.Name, field.Type, true, field.Doc)
+	assert.Equal(t, expectedHandle, writerHandle.programOutput)
 }
 
 func TestHandleField(t *testing.T) {
@@ -190,12 +210,11 @@ func TestHandleField(t *testing.T) {
 		"testHandleField",
 		"test",
 		"[]string",
-		"default",
+		"defaultStr1",
 		"we are testing handleField",
 		)
 	handleField(p, io, &cfgField, out)
-	expected := "Field: " + cfgField.Name + "\nType: " + cfgField.Type + "\nDocs: " + cfgField.Doc
-	expected += "\nDefault (enter to accept): default" + "\n> "
+	expected := buildExpectedOutput(0, "", cfgField.Name, cfgField.Type, true, cfgField.Doc)
 	assert.Equal(t, expected, writer.programOutput)
 }
 
