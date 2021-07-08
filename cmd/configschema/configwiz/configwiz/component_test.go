@@ -15,9 +15,12 @@
 package configwiz
 
 import (
-	"github.com/stretchr/testify/assert"
-	"go.opentelemetry.io/collector/cmd/configschema/configschema"
+	"fmt"
 	"testing"
+
+	"go.opentelemetry.io/collector/cmd/configschema/configschema"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type fakeReader struct {
@@ -48,11 +51,13 @@ func TestHandleField(t *testing.T) {
 		Kind:    "[]string",
 		Default: "default",
 		Doc:     "We are testing HandleField",
-		Fields:  nil,
 	}
-	handleField(p, io, &cfgField, out)
-	expected := "Field: " + cfgField.Name + "\nType: " + cfgField.Type + "\nDocs: " + cfgField.Doc
-	expected += "\nDefault (enter to accept): default" + "\n> "
+	handleField(io, p, &cfgField, out)
+	expected := fmt.Sprintf("Field: %s\n", cfgField.Name)
+	expected += fmt.Sprintf("Type: %s\n", cfgField.Type)
+	expected += fmt.Sprintf("Docs: %s\n", cfgField.Doc)
+	expected += "Default (enter to accept): default\n"
+	expected += "> "
 	assert.Equal(t, expected, writer.programOutput)
 }
 

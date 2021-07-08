@@ -84,13 +84,13 @@ func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 				out[field.Name] = componentWizard(lvl+1, field)
 			}
 		} else {
-			handleField(p, io, field, out)
+			handleField(io, p, field, out)
 		}
 	}
 	return out
 }
 
-func handleField(p indentingPrinter2, io clio, field *configschema.Field, out map[string]interface{}) {
+func handleField(io clio, p indentingPrinter2, field *configschema.Field, out map[string]interface{}) {
 	p.println("Field: " + field.Name)
 	typ := resolveType(field)
 	if typ != "" {

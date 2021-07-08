@@ -31,6 +31,7 @@ type indentingPrinter2 struct {
 func (p indentingPrinter2) println(s string) {
 	p.doPrint(s, "%s%s\n")
 }
+
 func (p indentingPrinter2) print(s string) {
 	p.doPrint(s, "%s%s")
 }
@@ -41,7 +42,7 @@ func (p indentingPrinter2) doPrint(s string, frmt string) {
 	p.write(fmt.Sprintf(frmt, strings.Repeat(" ", indent), s))
 }
 
-// Below will be removed in the future
+// Deprecated
 type indentingPrinter struct {
 	level int
 }
