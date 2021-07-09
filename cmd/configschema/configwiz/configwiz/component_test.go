@@ -81,6 +81,28 @@ func buildTestCFGFields(name string, typ string, kind string, defaultStr string,
 	return cfgField
 }
 
+func runCompWizardSquash(io clio) configschema.Field {
+	cfgField := buildTestCFGFields(
+		"squashTest",
+		"test",
+		"[]string",
+		"defaultStr",
+		"testing CompWizard squash",
+	)
+	newField := buildTestCFGFields(
+		"squash",
+		"test",
+		"[]string",
+		"defaultStr",
+		"testing Compwizard squash after squash",
+	)
+	var fields []*configschema.Field
+	fields = append(fields, &newField)
+	cfgField.Fields = fields
+	componentWizard(io, 0, &cfgField)
+	return cfgField
+}
+
 func runCompWizardHandleField(io clio) configschema.Field {
 	cfgField := buildTestCFGFields(
 		"testCompWizard",
@@ -94,6 +116,15 @@ func runCompWizardHandleField(io clio) configschema.Field {
 }
 
 func TestComponentWizard(t *testing.T) {
+	//if field.name == squash
+	writerSquash := fakeWriter{}
+	ioSquash := clio{writerSquash.write, fakeReader{}.read}
+	cfgSquash := runCompWizardSquash(ioSquash)
+	squash := cfgSquash.Fields[0].Fields[0]
+	expectedSquash := buildExpectedOutput(0, "", squash.Name, squash.Type, true, squash.Doc)
+	assert.Equal(t, expectedSquash, writerSquash.programOutput)
+
+	//else
 	writerHandle := fakeWriter{}
 	ioHandle := clio{writerHandle.write, fakeReader{}.read}
 	cfgHandle := runCompWizardHandleField(ioHandle)
