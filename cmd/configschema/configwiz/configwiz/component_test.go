@@ -39,24 +39,45 @@ func (w *fakeWriter) write(s string) {
 	w.programOutput += s
 }
 
+func buildTestCFGFields(name string, typ string, kind string, defaultStr string, doc string) configschema.Field {
+	var fields []*configschema.Field
+	cfgField2 := configschema.Field{
+		Name: name + "1",
+		Type: typ + "1",
+		Kind: kind + "1",
+		Default: defaultStr + "1",
+		Doc: doc + "1",
+	}
+	fields = append(fields, &cfgField2)
+	cfgField := configschema.Field{
+		Name:    name,
+		Type:    typ,
+		Kind:    kind,
+		Default: defaultStr,
+		Doc:     doc,
+		Fields: fields,
+	}
+	return cfgField
+}
+
 func TestHandleField(t *testing.T) {
 	writer := fakeWriter{}
 	reader := fakeReader{}
 	io := clio{writer.write, reader.read}
 	p := io.newIndentingPrinter(0)
 	out := map[string]interface{}{}
-	cfgField := configschema.Field{
-		Name:    "testHandleField",
-		Type:    "test",
-		Kind:    "[]string",
-		Default: "default",
-		Doc:     "We are testing HandleField",
-	}
+	cfgField := buildTestCFGFields(
+		"testHandleField",
+		"test",
+		"[]string",
+		"defaultStr1",
+		"we are testing handleField",
+	)
 	handleField(io, p, &cfgField, out)
 	expected := fmt.Sprintf("Field: %s\n", cfgField.Name)
 	expected += fmt.Sprintf("Type: %s\n", cfgField.Type)
 	expected += fmt.Sprintf("Docs: %s\n", cfgField.Doc)
-	expected += "Default (enter to accept): default\n"
+	expected += "Default (enter to accept): defaultStr1\n"
 	expected += "> "
 	assert.Equal(t, expected, writer.programOutput)
 }
