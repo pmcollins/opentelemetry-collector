@@ -55,6 +55,8 @@ func buildExpectedOutput(indent int, prefix string, name string, typ string, def
 	}
 	if defaultStr {
 		prefix += tab + "Default (enter to accept): defaultStr1\n"
+	} else {
+		prefix += tab + "Default (enter to accept): defaultStr\n"
 	}
 	prefix += tab + "> "
 	return prefix
@@ -81,81 +83,25 @@ func buildTestCFGFields(name string, typ string, kind string, defaultStr string,
 	return cfgField
 }
 
-func runCompWizardSquash(io clio) configschema.Field {
+func runCompWizard(io clio, name string, typ string, kind string, defaultStr string, doc string) configschema.Field {
+	const test = "test"
 	cfgField := buildTestCFGFields(
-		"squashTest",
-		"test",
-		"[]string",
+		name+test,
+		typ+test,
+		kind+test,
 		"defaultStr",
-		"testing CompWizard squash",
+		doc+test,
 	)
 	newField := buildTestCFGFields(
-		"squash",
-		"test",
-		"[]string",
+		name,
+		test+typ,
+		kind,
 		"defaultStr",
-		"testing Compwizard squash after squash",
+		test+doc,
 	)
 	var fields []*configschema.Field
 	fields = append(fields, &newField)
 	cfgField.Fields = fields
-	componentWizard(io, 0, &cfgField)
-	return cfgField
-}
-
-func runCompWizardStruct(io clio) configschema.Field {
-	cfgField := buildTestCFGFields(
-		"structTest",
-		"test",
-		"helper",
-		"defaultStr",
-		"testing CompWizard struct",
-	)
-	newField := buildTestCFGFields(
-		"testCompWizStruct",
-		"test",
-		"struct",
-		"defaultStr",
-		"Testing comp Wizard struct case",
-	)
-	var fields []*configschema.Field
-	fields = append(fields, &newField)
-	cfgField.Fields = fields
-	componentWizard(io, 0, &cfgField)
-	return cfgField
-}
-
-func runCompWizardPtr(io clio) configschema.Field {
-	cfgField := buildTestCFGFields(
-		"ptrTest",
-		"test",
-		"helper",
-		"defaultStr",
-		"testing CompWizard Ptr",
-	)
-
-	newField := buildTestCFGFields(
-		"testPtr",
-		"test",
-		"ptr",
-		"defaultStr",
-		"testing compWizard ptr case",
-	)
-	var fields []*configschema.Field
-	fields = append(fields, &newField)
-	cfgField.Fields = fields
-	componentWizard(io, 0, &cfgField)
-	return cfgField
-}
-
-func runCompWizardHandleField(io clio) configschema.Field {
-	cfgField := buildTestCFGFields(
-		"testCompWizard",
-		"test",
-		"[]string",
-		"defaultStr",
-		"testing CompWizard handleField",
-	)
 	componentWizard(io, 0, &cfgField)
 	return cfgField
 }
@@ -164,7 +110,7 @@ func TestComponentWizard(t *testing.T) {
 	//if field.name == squash
 	writerSquash := fakeWriter{}
 	ioSquash := clio{writerSquash.write, fakeReader{}.read}
-	cfgSquash := runCompWizardSquash(ioSquash)
+	cfgSquash := runCompWizard(ioSquash, "squash", "test", "helper", "", "testing compWizardSquash")
 	squash := cfgSquash.Fields[0].Fields[0]
 	expectedSquash := buildExpectedOutput(0, "", squash.Name, squash.Type, true, squash.Doc)
 	assert.Equal(t, expectedSquash, writerSquash.programOutput)
@@ -172,7 +118,7 @@ func TestComponentWizard(t *testing.T) {
 	//else if field.kind == "struct"
 	writerStruct := fakeWriter{}
 	ioStruct := clio{writerStruct.write, fakeReader{}.read}
-	cfgStruct := runCompWizardStruct(ioStruct)
+	cfgStruct := runCompWizard(ioStruct, "struct", "test", "struct", "", "testing CompWizard Struct")
 	struc := cfgStruct.Fields[0].Fields[0]
 	expectedStruct := fmt.Sprintf("%s\n", cfgStruct.Fields[0].Name)
 	expectedStruct = buildExpectedOutput(1, expectedStruct, struc.Name, struc.Type, true, struc.Doc)
@@ -181,7 +127,7 @@ func TestComponentWizard(t *testing.T) {
 	//else if field.kind == "ptr"
 	writerPtr := fakeWriter{}
 	ioPtr := clio{writerPtr.write, fakeReader{"n"}.read}
-	cfgPtr := runCompWizardPtr(ioPtr)
+	cfgPtr := runCompWizard(ioPtr, "ptr", "test", "ptr", "", "testing CompWizard ptr")
 	ptr := cfgPtr.Fields[0].Fields[0]
 	expectedPtr := fmt.Sprintf("%s (optional) skip (Y/n)> ", string(cfgPtr.Fields[0].Name))
 	expectedPtr = buildExpectedOutput(1, expectedPtr, ptr.Name, ptr.Type, true, ptr.Doc)
@@ -190,9 +136,9 @@ func TestComponentWizard(t *testing.T) {
 	//else
 	writerHandle := fakeWriter{}
 	ioHandle := clio{writerHandle.write, fakeReader{}.read}
-	cfgHandle := runCompWizardHandleField(ioHandle)
+	cfgHandle := runCompWizard(ioHandle, "handle", "test", "helper", "", "testing CompWizard handle")
 	field := cfgHandle.Fields[0]
-	expectedHandle := buildExpectedOutput(0, "", field.Name, field.Type, true, field.Doc)
+	expectedHandle := buildExpectedOutput(0, "", field.Name, field.Type, false, field.Doc)
 	assert.Equal(t, expectedHandle, writerHandle.programOutput)
 }
 
