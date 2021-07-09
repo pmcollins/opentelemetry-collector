@@ -81,6 +81,27 @@ func buildTestCFGFields(name string, typ string, kind string, defaultStr string,
 	return cfgField
 }
 
+func runCompWizardHandleField(io clio) configschema.Field {
+	cfgField := buildTestCFGFields(
+		"testCompWizard",
+		"test",
+		"[]string",
+		"defaultStr",
+		"testing CompWizard handleField",
+	)
+	componentWizard(io, 0, &cfgField)
+	return cfgField
+}
+
+func TestComponentWizard(t *testing.T) {
+	writerHandle := fakeWriter{}
+	ioHandle := clio{writerHandle.write, fakeReader{""}.read}
+	cfgHandle := runCompWizardHandleField(ioHandle)
+	field := cfgHandle.Fields[0]
+	expectedHandle := buildExpectedOutput(0, "", field.Name, field.Type, true, field.Doc)
+	assert.Equal(t, expectedHandle, writerHandle.programOutput)
+}
+
 func TestHandleField(t *testing.T) {
 	writer := fakeWriter{}
 	reader := fakeReader{}
