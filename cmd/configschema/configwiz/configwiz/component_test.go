@@ -16,6 +16,7 @@ package configwiz
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"go.opentelemetry.io/collector/cmd/configschema/configschema"
@@ -37,6 +38,25 @@ type fakeWriter struct {
 
 func (w *fakeWriter) write(s string) {
 	w.programOutput += s
+}
+func buildExpectedOutput(indent int, prefix string, name string, typ string, defaultStr bool, doc string) string {
+	const tabSize = 4
+	space := indent * tabSize
+	tab := strings.Repeat(" ", space)
+	if name != "" {
+		prefix += fmt.Sprintf(tab + "Field: %s\n", name)
+	}
+	if typ != "" {
+		prefix += fmt.Sprintf(tab + "Type: %s\n", typ)
+	}
+	if doc != "" {
+		prefix += fmt.Sprintf(tab + "Docs: %s\n", doc)
+	}
+	if defaultStr {
+		prefix += tab + "Default (enter to accept): defaultStr1\n"
+	}
+	prefix += tab + "> "
+	return prefix
 }
 
 func buildTestCFGFields(name string, typ string, kind string, defaultStr string, doc string) configschema.Field {
@@ -74,11 +94,7 @@ func TestHandleField(t *testing.T) {
 		"we are testing handleField",
 	)
 	handleField(io, p, &cfgField, out)
-	expected := fmt.Sprintf("Field: %s\n", cfgField.Name)
-	expected += fmt.Sprintf("Type: %s\n", cfgField.Type)
-	expected += fmt.Sprintf("Docs: %s\n", cfgField.Doc)
-	expected += "Default (enter to accept): defaultStr1\n"
-	expected += "> "
+	expected := buildExpectedOutput(0, "", cfgField.Name, cfgField.Type, true, cfgField.Doc)
 	assert.Equal(t, expected, writer.programOutput)
 }
 
