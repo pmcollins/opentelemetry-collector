@@ -95,7 +95,7 @@ func runCompWizardHandleField(io clio) configschema.Field {
 
 func TestComponentWizard(t *testing.T) {
 	writerHandle := fakeWriter{}
-	ioHandle := clio{writerHandle.write, fakeReader{""}.read}
+	ioHandle := clio{writerHandle.write, fakeReader{}.read}
 	cfgHandle := runCompWizardHandleField(ioHandle)
 	field := cfgHandle.Fields[0]
 	expectedHandle := buildExpectedOutput(0, "", field.Name, field.Type, true, field.Doc)

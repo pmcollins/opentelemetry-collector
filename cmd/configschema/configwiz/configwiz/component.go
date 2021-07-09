@@ -64,13 +64,12 @@ func handleComponent(
 		}
 		fmt.Printf("%s %q\n", strings.Title(componentGroup), name)
 		f := configschema.ReadFields(reflect.ValueOf(cfgInfo.CfgInstance), dr)
-		typeMap[name] = componentWizard(io,0, f)
+		typeMap[name] = componentWizard(io, 0, f)
 	}
 }
 
 func componentWizard(io clio, lvl int, f *configschema.Field) map[string]interface{} {
 	out := map[string]interface{}{}
-	io = clio{printLine, readline}
 	p := io.newIndentingPrinter(lvl)
 	for _, field := range f.Fields {
 		if field.Name == "squash" {
