@@ -39,18 +39,19 @@ type fakeWriter struct {
 func (w *fakeWriter) write(s string) {
 	w.programOutput += s
 }
+
 func buildExpectedOutput(indent int, prefix string, name string, typ string, defaultStr bool, doc string) string {
 	const tabSize = 4
 	space := indent * tabSize
 	tab := strings.Repeat(" ", space)
 	if name != "" {
-		prefix += fmt.Sprintf(tab + "Field: %s\n", name)
+		prefix += fmt.Sprintf(tab+"Field: %s\n", name)
 	}
 	if typ != "" {
-		prefix += fmt.Sprintf(tab + "Type: %s\n", typ)
+		prefix += fmt.Sprintf(tab+"Type: %s\n", typ)
 	}
 	if doc != "" {
-		prefix += fmt.Sprintf(tab + "Docs: %s\n", doc)
+		prefix += fmt.Sprintf(tab+"Docs: %s\n", doc)
 	}
 	if defaultStr {
 		prefix += tab + "Default (enter to accept): defaultStr1\n"
@@ -62,11 +63,11 @@ func buildExpectedOutput(indent int, prefix string, name string, typ string, def
 func buildTestCFGFields(name string, typ string, kind string, defaultStr string, doc string) configschema.Field {
 	var fields []*configschema.Field
 	cfgField2 := configschema.Field{
-		Name: name + "1",
-		Type: typ + "1",
-		Kind: kind + "1",
+		Name:    name + "1",
+		Type:    typ + "1",
+		Kind:    kind + "1",
 		Default: defaultStr + "1",
-		Doc: doc + "1",
+		Doc:     doc + "1",
 	}
 	fields = append(fields, &cfgField2)
 	cfgField := configschema.Field{
@@ -75,7 +76,7 @@ func buildTestCFGFields(name string, typ string, kind string, defaultStr string,
 		Kind:    kind,
 		Default: defaultStr,
 		Doc:     doc,
-		Fields: fields,
+		Fields:  fields,
 	}
 	return cfgField
 }
