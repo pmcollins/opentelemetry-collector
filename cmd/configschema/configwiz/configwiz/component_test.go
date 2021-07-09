@@ -103,6 +103,28 @@ func runCompWizardSquash(io clio) configschema.Field {
 	return cfgField
 }
 
+func runCompWizardStruct(io clio) configschema.Field {
+	cfgField := buildTestCFGFields(
+		"structTest",
+		"test",
+		"helper",
+		"defaultStr",
+		"testing CompWizard struct",
+	)
+	newField := buildTestCFGFields(
+		"testCompWizStruct",
+		"test",
+		"struct",
+		"defaultStr",
+		"Testing comp Wizard struct case",
+	)
+	var fields []*configschema.Field
+	fields = append(fields, &newField)
+	cfgField.Fields = fields
+	componentWizard(io, 0, &cfgField)
+	return cfgField
+}
+
 func runCompWizardHandleField(io clio) configschema.Field {
 	cfgField := buildTestCFGFields(
 		"testCompWizard",
@@ -123,6 +145,15 @@ func TestComponentWizard(t *testing.T) {
 	squash := cfgSquash.Fields[0].Fields[0]
 	expectedSquash := buildExpectedOutput(0, "", squash.Name, squash.Type, true, squash.Doc)
 	assert.Equal(t, expectedSquash, writerSquash.programOutput)
+
+	//else if field.kind == "struct"
+	writerStruct := fakeWriter{}
+	ioStruct := clio{writerStruct.write, fakeReader{}.read}
+	cfgStruct := runCompWizardStruct(ioStruct)
+	struc := cfgStruct.Fields[0].Fields[0]
+	expectedStruct := fmt.Sprintf("%s\n", cfgStruct.Fields[0].Name)
+	expectedStruct = buildExpectedOutput(1, expectedStruct, struc.Name, struc.Type, true, struc.Doc)
+	assert.Equal(t, expectedStruct, writerStruct.programOutput)
 
 	//else
 	writerHandle := fakeWriter{}
