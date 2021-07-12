@@ -55,6 +55,8 @@ func buildExpectedOutput(indent int, prefix string, name string, typ string, def
 	}
 	if defaultStr {
 		prefix += tab + "Default (enter to accept): defaultStr1\n"
+	} else {
+		prefix += tab + "Default (enter to accept): defaultStr\n"
 	}
 	prefix += tab + "> "
 	return prefix
@@ -79,6 +81,65 @@ func buildTestCFGFields(name string, typ string, kind string, defaultStr string,
 		Fields:  fields,
 	}
 	return cfgField
+}
+
+func runCompWizard(io clio, name string, typ string, kind string, defaultStr string, doc string) configschema.Field {
+	const test = "test"
+	cfgField := buildTestCFGFields(
+		name+test,
+		typ+test,
+		kind+test,
+		"defaultStr",
+		doc+test,
+	)
+	newField := buildTestCFGFields(
+		name,
+		test+typ,
+		kind,
+		"defaultStr",
+		test+doc,
+	)
+	var fields []*configschema.Field
+	fields = append(fields, &newField)
+	cfgField.Fields = fields
+	componentWizard(io, 0, &cfgField)
+	return cfgField
+}
+
+func TestComponentWizard(t *testing.T) {
+	//if field.name == squash
+	writerSquash := fakeWriter{}
+	ioSquash := clio{writerSquash.write, fakeReader{}.read}
+	cfgSquash := runCompWizard(ioSquash, "squash", "test", "helper", "", "testing compWizardSquash")
+	squash := cfgSquash.Fields[0].Fields[0]
+	expectedSquash := buildExpectedOutput(0, "", squash.Name, squash.Type, true, squash.Doc)
+	assert.Equal(t, expectedSquash, writerSquash.programOutput)
+
+	//else if field.kind == "struct"
+	writerStruct := fakeWriter{}
+	ioStruct := clio{writerStruct.write, fakeReader{}.read}
+	cfgStruct := runCompWizard(ioStruct, "struct", "test", "struct", "", "testing CompWizard Struct")
+	struc := cfgStruct.Fields[0].Fields[0]
+	expectedStruct := fmt.Sprintf("%s\n", cfgStruct.Fields[0].Name)
+	expectedStruct = buildExpectedOutput(1, expectedStruct, struc.Name, struc.Type, true, struc.Doc)
+	assert.Equal(t, expectedStruct, writerStruct.programOutput)
+
+	//else if field.kind == "ptr"
+	writerPtr := fakeWriter{}
+	ioPtr := clio{writerPtr.write, fakeReader{"n"}.read}
+	cfgPtr := runCompWizard(ioPtr, "ptr", "test", "ptr", "", "testing CompWizard ptr")
+	ptr := cfgPtr.Fields[0].Fields[0]
+	expectedPtr := fmt.Sprintf("%s (optional) skip (Y/n)> ", string(cfgPtr.Fields[0].Name))
+	expectedPtr = buildExpectedOutput(1, expectedPtr, ptr.Name, ptr.Type, true, ptr.Doc)
+	assert.Equal(t, expectedPtr, writerPtr.programOutput)
+
+	//else
+	writerHandle := fakeWriter{}
+	ioHandle := clio{writerHandle.write, fakeReader{}.read}
+	cfgHandle := runCompWizard(ioHandle, "handle", "test", "helper", "", "testing CompWizard handle")
+	field := cfgHandle.Fields[0]
+	expectedHandle := buildExpectedOutput(0, "", field.Name, field.Type, false, field.Doc)
+	assert.Equal(t, expectedHandle, writerHandle.programOutput)
 }
 
 func TestHandleField(t *testing.T) {

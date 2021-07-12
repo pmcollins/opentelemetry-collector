@@ -56,6 +56,7 @@ func handleComponent(
 ) {
 	typeMap := map[string]interface{}{}
 	m[componentGroup+"s"] = typeMap
+	io := clio{printLine, readline}
 	for _, name := range names {
 		cfgInfo, err := configschema.GetCfgInfo(factories, componentGroup, strings.Split(name, "/")[0])
 		if err != nil {
@@ -63,25 +64,24 @@ func handleComponent(
 		}
 		fmt.Printf("%s %q\n", strings.Title(componentGroup), name)
 		f := configschema.ReadFields(reflect.ValueOf(cfgInfo.CfgInstance), dr)
-		typeMap[name] = componentWizard(0, f)
+		typeMap[name] = componentWizard(io, 0, f)
 	}
 }
 
-func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
+func componentWizard(io clio, lvl int, f *configschema.Field) map[string]interface{} {
 	out := map[string]interface{}{}
-	io := clio{printLine, readline}
 	p := io.newIndentingPrinter(lvl)
 	for _, field := range f.Fields {
 		if field.Name == "squash" {
-			componentWizard(lvl, field)
+			componentWizard(io, lvl, field)
 		} else if field.Kind == "struct" {
 			p.println(field.Name)
-			out[field.Name] = componentWizard(lvl+1, field)
+			out[field.Name] = componentWizard(io, lvl+1, field)
 		} else if field.Kind == "ptr" {
 			p.print(fmt.Sprintf("%s (optional) skip (Y/n)> ", field.Name))
-			in := readline("")
+			in := io.read("")
 			if in == "n" {
-				out[field.Name] = componentWizard(lvl+1, field)
+				out[field.Name] = componentWizard(io, lvl+1, field)
 			}
 		} else {
 			handleField(io, p, field, out)
