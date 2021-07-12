@@ -19,6 +19,30 @@ import (
 	"strings"
 )
 
+func printLine(s string) {
+	fmt.Print(s)
+}
+
+type indentingPrinter2 struct {
+	level int
+	write func(s string)
+}
+
+func (p indentingPrinter2) println(s string) {
+	p.doPrint(s, "%s%s\n")
+}
+
+func (p indentingPrinter2) print(s string) {
+	p.doPrint(s, "%s%s")
+}
+
+func (p indentingPrinter2) doPrint(s string, frmt string) {
+	const tabSize = 4
+	indent := p.level * tabSize
+	p.write(fmt.Sprintf(frmt, strings.Repeat(" ", indent), s))
+}
+
+// Deprecated
 type indentingPrinter struct {
 	level int
 }

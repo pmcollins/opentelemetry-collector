@@ -69,7 +69,8 @@ func handleComponent(
 
 func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 	out := map[string]interface{}{}
-	p := indentingPrinter{lvl}
+	io := clio{printLine, readline}
+	p := io.newIndentingPrinter(lvl)
 	for _, field := range f.Fields {
 		if field.Name == "squash" {
 			componentWizard(lvl, field)
@@ -83,13 +84,13 @@ func componentWizard(lvl int, f *configschema.Field) map[string]interface{} {
 				out[field.Name] = componentWizard(lvl+1, field)
 			}
 		} else {
-			handleField(p, field, out)
+			handleField(io, p, field, out)
 		}
 	}
 	return out
 }
 
-func handleField(p indentingPrinter, field *configschema.Field, out map[string]interface{}) {
+func handleField(io clio, p indentingPrinter2, field *configschema.Field, out map[string]interface{}) {
 	p.println("Field: " + field.Name)
 	typ := resolveType(field)
 	if typ != "" {
@@ -100,7 +101,7 @@ func handleField(p indentingPrinter, field *configschema.Field, out map[string]i
 		p.println(typString)
 	}
 	if field.Doc != "" {
-		p.println("Docs:  " + strings.ReplaceAll(field.Doc, "\n", " "))
+		p.println("Docs: " + strings.ReplaceAll(field.Doc, "\n", " "))
 	}
 	if field.Default != nil {
 		p.println(fmt.Sprintf("Default (enter to accept): %v", field.Default))
@@ -110,7 +111,7 @@ func handleField(p indentingPrinter, field *configschema.Field, out map[string]i
 	if field.Default != nil {
 		defaultVal = fmt.Sprintf("%v", field.Default)
 	}
-	in := readline(defaultVal)
+	in := io.read(defaultVal)
 	if in == "" {
 		return
 	}
